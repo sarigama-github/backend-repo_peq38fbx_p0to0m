@@ -1,15 +1,22 @@
 INFO:     Will watch for changes in these directories: ['/home/workspace']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [152] using StatReload
-INFO:     Started server process [154]
+INFO:     Started reloader process [237] using StatReload
+INFO:     Started server process [239]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     172.20.0.1:43402 - "HEAD / HTTP/1.1" 405 Method Not Allowed
-INFO:     172.20.0.1:60602 - "OPTIONS /api/companies HTTP/1.1" 200 OK
-INFO:     172.20.0.1:60602 - "POST /api/companies HTTP/1.1" 200 OK
-INFO:     172.20.0.1:44392 - "OPTIONS / HTTP/1.1" 200 OK
-INFO:     172.20.0.1:44392 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.0.1:44392 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.0.1:44408 - "OPTIONS /test HTTP/1.1" 200 OK
-INFO:     172.20.0.1:44392 - "GET /test HTTP/1.1" 200 OK
-INFO:     172.20.0.1:44392 - "GET /test HTTP/1.1" 200 OK
+INFO:     172.20.0.1:55696 - "GET /api/companies HTTP/1.1" 401 Unauthorized
+INFO:     172.20.0.1:55698 - "GET /api/companies HTTP/1.1" 401 Unauthorized
+INFO:     172.20.0.1:55714 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+INFO:     172.20.0.1:45814 - "GET /api/companies HTTP/1.1" 401 Unauthorized
+INFO:     172.20.0.1:45820 - "GET /api/companies HTTP/1.1" 401 Unauthorized
+INFO:     172.20.0.1:45828 - "OPTIONS /api/companies HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45828 - "GET /api/companies HTTP/1.1" 401 Unauthorized
+INFO:     172.20.0.1:45828 - "GET /api/companies HTTP/1.1" 401 Unauthorized
+INFO:     172.20.0.1:45176 - "OPTIONS / HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45176 - "GET / HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45176 - "GET / HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45186 - "OPTIONS /test HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45176 - "GET /test HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45176 - "GET /test HTTP/1.1" 200 OK
+INFO:     172.20.0.1:46434 - "GET /api/companies HTTP/1.1" 401 Unauthorized
+INFO:     172.20.0.1:46444 - "GET /api/companies HTTP/1.1" 401 Unauthorized

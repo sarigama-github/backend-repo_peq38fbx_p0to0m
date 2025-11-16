@@ -12,7 +12,7 @@ Model name is converted to lowercase for the collection name:
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Literal
 
 # Example schemas (replace with your own):
 
@@ -58,6 +58,19 @@ class Module(BaseModel):
     company_id: str = Field(..., description="Associated company id as string")
     name: str = Field(..., description="Module name, e.g., Sales, Inventory, HR")
     enabled: bool = Field(True, description="Whether the module is enabled")
+
+# Role-based access control (RBAC) schemas
+
+class UserAccount(BaseModel):
+    """
+    Application user accounts for RBAC
+    Collection name: "useraccount"
+    """
+    name: str = Field(..., description="Full name")
+    email: str = Field(..., description="Unique email")
+    company_id: Optional[str] = Field(None, description="Company association (string _id)")
+    role: Literal['admin', 'manager', 'viewer'] = Field('viewer', description="Role for access control")
+    api_key: str = Field(..., description="API key used for simple auth (store securely in production)")
 
 # Note: The Flames database viewer will automatically:
 # 1. Read these schemas from GET /schema endpoint

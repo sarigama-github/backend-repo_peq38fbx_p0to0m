@@ -1,11 +1,11 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 
 from database import db, create_document, get_documents
-from schemas import Company, Module
+from schemas import Company, Module, UserAccount
 
 app = FastAPI(title="Global Management Mini-ERP API")
 
@@ -60,6 +60,43 @@ def test_database():
     
     return response
 
+# -------- Simple API key auth (RBAC) --------
+
+class AuthContext(BaseModel):
+    user_id: str
+    email: str
+    role: str
+    company_id: Optional[str] = None
+
+
+def get_auth_context(x_api_key: Optional[str] = Header(default=None)) -> AuthContext:
+    """
+    Minimal API key auth using "useraccount" collection.
+    - Clients send X-API-Key header.
+    - We lookup a useraccount by api_key and return role + company context.
+    """
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="Missing X-API-Key header")
+
+    doc = db["useraccount"].find_one({"api_key": x_api_key}) if db else None
+    if not doc:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    return AuthContext(
+        user_id=str(doc.get("_id")),
+        email=doc.get("email"),
+        role=doc.get("role", "viewer"),
+        company_id=doc.get("company_id")
+    )
+
+
+def require_roles(*roles: str):
+    def dependency(ctx: AuthContext = Depends(get_auth_context)) -> AuthContext:
+        if ctx.role not in roles:
+            raise HTTPException(status_code=403, detail="Forbidden: insufficient role")
+        return ctx
+    return dependency
+
 # -------- Mini-ERP endpoints --------
 
 class CompanyCreate(BaseModel):
@@ -69,13 +106,13 @@ class CompanyCreate(BaseModel):
     modules: Optional[List[str]] = []
 
 @app.post("/api/companies")
-def create_company(payload: CompanyCreate):
+def create_company(payload: CompanyCreate, ctx: AuthContext = Depends(require_roles("admin"))):
     company = Company(**payload.model_dump())
     company_id = create_document("company", company)
     return {"id": company_id, "message": "Company created"}
 
 @app.get("/api/companies")
-def list_companies():
+def list_companies(ctx: AuthContext = Depends(require_roles("admin", "manager"))):
     docs = get_documents("company", limit=50)
     for d in docs:
         d["_id"] = str(d.get("_id"))
@@ -87,11 +124,39 @@ class ModuleToggle(BaseModel):
     enabled: bool
 
 @app.post("/api/modules/toggle")
-def toggle_module(payload: ModuleToggle):
+def toggle_module(payload: ModuleToggle, ctx: AuthContext = Depends(require_roles("admin", "manager"))):
     # naive insert to record module toggles; in real app we'd update existing
     mod = Module(company_id=payload.company_id, name=payload.name, enabled=payload.enabled)
     module_id = create_document("module", mod)
     return {"id": module_id, "message": "Module updated"}
+
+# -------- User management for RBAC bootstrap --------
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    role: str = "viewer"
+    company_id: Optional[str] = None
+
+class APIKeyIssue(BaseModel):
+    email: str
+
+@app.post("/api/users")
+def create_user(payload: UserCreate, ctx: AuthContext = Depends(require_roles("admin"))):
+    # In a real app, enforce unique email and hash secrets.
+    api_key = os.urandom(16).hex()
+    user = UserAccount(name=payload.name, email=payload.email, role=payload.role, company_id=payload.company_id, api_key=api_key)
+    user_id = create_document("useraccount", user)
+    return {"id": user_id, "api_key": api_key}
+
+@app.post("/api/users/issue-key")
+def issue_api_key(payload: APIKeyIssue, ctx: AuthContext = Depends(require_roles("admin"))):
+    doc = db["useraccount"].find_one({"email": payload.email}) if db else None
+    if not doc:
+        raise HTTPException(status_code=404, detail="User not found")
+    new_key = os.urandom(16).hex()
+    db["useraccount"].update_one({"_id": doc["_id"]}, {"$set": {"api_key": new_key}})
+    return {"api_key": new_key}
 
 if __name__ == "__main__":
     import uvicorn
