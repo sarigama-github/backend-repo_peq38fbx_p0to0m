@@ -12,7 +12,7 @@ Model name is converted to lowercase for the collection name:
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
 # Example schemas (replace with your own):
 
@@ -38,8 +38,26 @@ class Product(BaseModel):
     category: str = Field(..., description="Product category")
     in_stock: bool = Field(True, description="Whether product is in stock")
 
-# Add your own schemas here:
-# --------------------------------------------------
+# Mini-ERP core schemas
+
+class Company(BaseModel):
+    """
+    Company schema
+    Collection name: "company"
+    """
+    name: str = Field(..., description="Company name")
+    industry: Optional[str] = Field(None, description="Industry or sector")
+    country: Optional[str] = Field(None, description="Headquarters country")
+    modules: List[str] = Field(default_factory=list, description="Enabled modules for this company")
+
+class Module(BaseModel):
+    """
+    Module schema (optional per-company collection)
+    Collection name: "module"
+    """
+    company_id: str = Field(..., description="Associated company id as string")
+    name: str = Field(..., description="Module name, e.g., Sales, Inventory, HR")
+    enabled: bool = Field(True, description="Whether the module is enabled")
 
 # Note: The Flames database viewer will automatically:
 # 1. Read these schemas from GET /schema endpoint
